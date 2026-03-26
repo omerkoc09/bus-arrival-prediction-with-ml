@@ -4,3 +4,9 @@ __pycache__/
 .env
 *.egg-info/
 .venv/
+
+# Veritabani (collector tarafindan uretilir, buyuk binary)
+data_collector/collected_data/route_502_realtime.db
+
+# Egitilmis modeller (notebook'lar yeniden uretir)
+models/

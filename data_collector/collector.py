@@ -2,6 +2,7 @@
 Route 502 Real-Time Data Collector
 
 Izmir ESHOT API'den Route 502 icin gercek zamanli otobus konum verisi toplar.
+Her saatte bir OpenWeatherMap API'den hava durumu da kaydedilir.
 Veriler SQLite veritabanina kaydedilir.
 
 Kullanim:
@@ -9,6 +10,11 @@ Kullanim:
     python collector.py --interval 60    # 60 saniye aralikla topla
     python collector.py --duration 3600  # 1 saat boyunca topla
     python collector.py --test           # Tek bir API cagri testi yap
+
+Hava durumu icin cevresel degisken ayarla (opsiyonel):
+    Windows : set OPENWEATHER_API_KEY=your_key_here
+    Linux   : export OPENWEATHER_API_KEY=your_key_here
+    API key yoksa mock veri kaydedilir (gercek proje icin anahtar alin).
 """
 
 import argparse
@@ -23,6 +29,7 @@ import time
 from datetime import datetime, timedelta
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
+from urllib.parse import urlencode
 
 from config import (
     ROUTE_ID,
@@ -34,6 +41,13 @@ from config import (
     POLL_INTERVAL_SECONDS,
     DATA_DIR,
 )
+
+# --- Hava durumu sabitleri ---
+# Route 502 guzergahinin merkez koordinatlari (Bayrakli bolgesi)
+WEATHER_LAT = 38.4600
+WEATHER_LON = 27.1700
+WEATHER_INTERVAL_SECONDS = 3600   # Saatte bir hava durumu cek
+OPENWEATHER_KEY = os.getenv("OPENWEATHER_API_KEY", "")
 
 # --- Logging ---
 logging.basicConfig(
@@ -102,15 +116,121 @@ def init_db():
         )
     """)
 
+    # Hava durumu kayitlari (saatte bir)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS weather_readings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT NOT NULL,
+            source TEXT NOT NULL,
+            temperature REAL,
+            humidity REAL,
+            precipitation REAL,
+            wind_speed REAL,
+            visibility REAL,
+            conditions TEXT,
+            weather_category TEXT NOT NULL
+        )
+    """)
+
     # Indeksler
     c.execute("CREATE INDEX IF NOT EXISTS idx_bp_poll ON bus_positions(poll_id)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_bp_bus ON bus_positions(otobus_id, timestamp)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_sa_stop ON stop_arrivals(durak_id, timestamp)")
     c.execute("CREATE INDEX IF NOT EXISTS idx_te_bus ON trip_events(otobus_id, timestamp)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_wr_ts ON weather_readings(timestamp)")
 
     conn.commit()
     conn.close()
     log.info(f"Database initialized: {DB_PATH}")
+
+
+# --- Weather ---
+def _categorize_weather(condition):
+    """Hava durumunu 4 kategoriye ayir (makale standardı)."""
+    c = condition.lower()
+    if any(w in c for w in ["rain", "drizzle", "shower", "thunderstorm"]):
+        return "rainy"
+    elif any(w in c for w in ["overcast", "fog", "mist", "haze"]):
+        return "overcast"
+    elif any(w in c for w in ["cloud", "partly", "scattered", "broken"]):
+        return "partly_cloudy"
+    else:
+        return "clear"
+
+
+def fetch_weather():
+    """
+    OpenWeatherMap'ten anlık hava durumu cek.
+    API key yoksa deterministik mock veri uret (saat bazli, tutarli).
+    """
+    if OPENWEATHER_KEY:
+        params = urlencode({
+            "lat": WEATHER_LAT,
+            "lon": WEATHER_LON,
+            "appid": OPENWEATHER_KEY,
+            "units": "metric",
+        })
+        url = f"http://api.openweathermap.org/data/2.5/weather?{params}"
+        try:
+            req = Request(url, headers={"Accept": "application/json"})
+            with urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+            conditions = data["weather"][0]["description"]
+            return {
+                "source": "openweathermap",
+                "temperature": data["main"]["temp"],
+                "humidity": data["main"]["humidity"],
+                "precipitation": data.get("rain", {}).get("1h", 0.0),
+                "wind_speed": data["wind"]["speed"] * 3.6,  # m/s -> km/h
+                "visibility": data.get("visibility", 10000) / 1000.0,
+                "conditions": conditions,
+                "weather_category": _categorize_weather(conditions),
+            }
+        except Exception as e:
+            log.warning(f"OpenWeatherMap hatasi: {e}. Mock veri kullaniliyor.")
+
+    # --- Mock veri (API key yokken veya hata durumunda) ---
+    # Saate gore deterministik degerler (rastgele degil, tekrar uretilebilir)
+    hour = datetime.now().hour
+    base_temp = 18 + 8 * math.sin(math.pi * (hour - 6) / 12)  # Gun ici sicaklik egrisi
+    humidity = 65 - 15 * math.sin(math.pi * (hour - 6) / 12)
+    # Gunden güne farklılık icin gun sayisi kullan
+    day_seed = datetime.now().timetuple().tm_yday
+    precip = 2.0 if (day_seed % 7 == 0 and hour in range(8, 18)) else 0.0
+    conditions = "rain" if precip > 0 else ("cloud" if humidity > 70 else "clear sky")
+    return {
+        "source": "mock",
+        "temperature": round(base_temp, 1),
+        "humidity": round(humidity, 1),
+        "precipitation": precip,
+        "wind_speed": round(8 + 4 * math.sin(math.pi * hour / 12), 1),
+        "visibility": 8.0 if precip > 0 else 12.0,
+        "conditions": conditions,
+        "weather_category": _categorize_weather(conditions),
+    }
+
+
+def save_weather(timestamp, weather):
+    """Hava durumu kaydini veritabanina ekle."""
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("""
+        INSERT INTO weather_readings
+        (timestamp, source, temperature, humidity, precipitation,
+         wind_speed, visibility, conditions, weather_category)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        timestamp,
+        weather["source"],
+        weather["temperature"],
+        weather["humidity"],
+        weather["precipitation"],
+        weather["wind_speed"],
+        weather["visibility"],
+        weather["conditions"],
+        weather["weather_category"],
+    ))
+    conn.commit()
+    conn.close()
 
 
 # --- API Calls ---
@@ -336,6 +456,30 @@ def poll_once():
     return len(positions), len(arrivals), len(events)
 
 
+# Son hava durumu cekme zamani (baslangicta None -> ilk pollda hemen cek)
+_last_weather_fetch: datetime = None
+
+
+def maybe_fetch_weather(now: datetime):
+    """
+    WEATHER_INTERVAL_SECONDS sureden fazla gecmisse hava durumu cek ve kaydet.
+    Ilk pollda da hemen ceker.
+    """
+    global _last_weather_fetch
+    if _last_weather_fetch is None or (now - _last_weather_fetch).total_seconds() >= WEATHER_INTERVAL_SECONDS:
+        timestamp = now.strftime("%Y-%m-%d %H:%M:%S")
+        weather = fetch_weather()
+        save_weather(timestamp, weather)
+        src_label = "GERCEK" if weather["source"] == "openweathermap" else "MOCK"
+        log.info(
+            f"Hava durumu [{src_label}]: {weather['temperature']}C, "
+            f"{weather['weather_category']}, "
+            f"yagis={weather['precipitation']}mm, "
+            f"nem={weather['humidity']}%"
+        )
+        _last_weather_fetch = now
+
+
 def run_test():
     """Tek bir API cagri testi yap ve sonuclari goster."""
     log.info("=== TEST MODE ===")
@@ -349,12 +493,27 @@ def run_test():
         stop_label = f"{stop['name']} ({dist:.0f}m)" if stop else "?"
         log.info(f"  Bus {p['otobus_id']} [{dir_label}] @ ({p['lat']:.4f}, {p['lon']:.4f}) -> {stop_label}")
 
-    log.info(f"\n2. Halkapinar Metro (10462) duragi sorgulanıyor...")
+    log.info("2. Halkapinar Metro (10462) duragi sorgulanıyor...")
     arrivals = fetch_stop_arrivals([10462])
     for a in arrivals:
         log.info(f"  Bus {a['otobus_id']}: {a['kalan_durak']} durak kaldi @ ({a['lat']:.4f}, {a['lon']:.4f})")
 
-    log.info(f"\nTest tamamlandi. {len(positions)} otobus, {len(arrivals)} yaklasan kaydi.")
+    log.info("3. Hava durumu test ediliyor...")
+    weather = fetch_weather()
+    src_label = "GERCEK (OpenWeatherMap)" if weather["source"] == "openweathermap" else "MOCK (API key yok)"
+    log.info(f"  Kaynak   : {src_label}")
+    log.info(f"  Sicaklik : {weather['temperature']} C")
+    log.info(f"  Nem      : {weather['humidity']} %")
+    log.info(f"  Yagis    : {weather['precipitation']} mm")
+    log.info(f"  Ruzgar   : {weather['wind_speed']} km/h")
+    log.info(f"  Gorunum  : {weather['visibility']} km")
+    log.info(f"  Durum    : {weather['conditions']}")
+    log.info(f"  Kategori : {weather['weather_category']}")
+
+    log.info(
+        f"\nTest tamamlandi. {len(positions)} otobus, "
+        f"{len(arrivals)} yaklasan kaydi, hava: {weather['weather_category']}."
+    )
 
 
 def run_collector(interval, duration):
@@ -383,6 +542,12 @@ def run_collector(interval, duration):
             break
 
         try:
+            now = datetime.now()
+
+            # Hava durumu: saatte bir
+            maybe_fetch_weather(now)
+
+            # Otobus verisi: her pollda
             n_pos, n_arr, n_evt = poll_once()
             total_polls += 1
             total_positions += n_pos

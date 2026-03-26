@@ -1,0 +1,4 @@
+model,MAE (dk),RMSE (dk),MAPE (%),R2
+Selective Trend,0.665,0.8737,58.28,-0.083
+Enhanced XGBoost,0.3694,0.6005,21.38,0.4885
+Hybrid Stacking,0.3701,0.5995,21.65,0.4901

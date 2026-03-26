@@ -1,0 +1,6 @@
+model,MAE (dk),RMSE (dk),MAPE (%),R2
+Historical Average,0.5779,0.8234,38.05,-0.0403
+Naive (GTFS Scheduled),0.59,0.7932,42.14,0.0347
+Random Forest,0.6121,0.7874,49.51,0.0488
+Linear Regression,0.6497,0.8976,55.29,-0.2359
+XGBoost,0.6717,0.797,51.3,0.0254
