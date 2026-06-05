@@ -23,7 +23,7 @@
 ---
 
 ### 2. Demo Dashboard
-**Neden:** Teslim kriterlerinde "çalışan demo uygulaması" var; mevcut [scripts/web_dashboard.py](scripts/web_dashboard.py) güncel modele bağlı değil.
+**Neden:** Teslim kriterlerinde "çalışan demo uygulaması" var. (Eski `web_dashboard.py` 2026-06-05 refaktöründe silindi — güncel modele hiç bağlanmamıştı; demo sıfırdan, `improved_lstm.py` ürettiği `models/improved_lstm*.pt` üzerine kurulmalı.)
 
 **Kapsam:**
 - LSTM modeline (`models/lstm_model.pt`) bağlanmalı.

@@ -48,12 +48,6 @@ Aşağıdaki tablolar, veri setinin tamamı üzerinde eğitilen modellerin test 
 | 1 | **Improved LSTM** | **0.3507** | **0.4918** | **38.41** | 0.3569 |
 | 2 | **XGBoost (Improved)** | 0.3944 | 0.6483 | 41.29 | **0.5379** |
 | 3 | Random Forest (Improved) | 0.4079 | 0.6614 | 42.67 | 0.5190 |
-| 4 | XGBoost (Vanilla) | 0.4925 | 0.8259 | 54.72 | 0.2499 |
-| 5 | Random Forest (Vanilla) | 0.4984 | 0.8460 | 55.24 | 0.2131 |
-| 6 | Enhanced XGBoost (Eski) | 0.5087 | 0.8543 | 57.10 | 0.1975 |
-| 7 | Historical Average | 0.5365 | 0.8692 | 59.87 | 0.1692 |
-| 8 | Linear Regression | 0.5723 | 0.9454 | 64.41 | 0.0173 |
-| 9 | Naive (GTFS Planlanan) | 0.6048 | 0.9933 | 64.76 | -0.0848 |
 
 ---
 
@@ -67,19 +61,11 @@ Aşağıdaki tablolar, veri setinin tamamı üzerinde eğitilen modellerin test 
 *   **Bulgu:** `Improved LSTM` en düşük ortalama hatayı (MAE = 0.3507 dk) verirken, `XGBoost (Improved)` en yüksek açıklayıcılık oranını (R² = 0.5379) elde etmiştir.
 *   **Sebep-Sonuç:** LSTM modeli, seyahat süresi tahminini zaman serisi sekansı (`window_size=5` ile son 5 durağın seyir hızı ve sapması) olarak ele alır. Bu sayede otobüsün anlık ivmesini ve son duraklardaki trendi pürüzsüz takip ederek MAE'de en iyi sonucu verir. XGBoost ise spatiotemporal özellikleri (hava durumu, günün saati, durak konumu) doğrudan ağaç yapılarıyla modellere böler. Varyansı (R²) açıklamakta daha başarılı olsa da, anlık sekans takibini LSTM kadar pürüzsüz yapamadığı için MAE'de LSTM'in biraz gerisinde kalmıştır.
 
-### 4.3. Klasik Modellerin Başarısızlığı ve Naive GTFS Performansı
-*   **Bulgu:** `Naive (GTFS)` modeli negatif bir R² skoruna (-0.0848) ve 0.6048 dk MAE değerine sahiptir.
-*   **Sebep-Sonuç:** GTFS verileri statik tarifelerden ibarettir. Gerçek zamanlı trafik sıkışıklığını, hava muhalefetini ve duraklarda yolcu yoğunluğuna bağlı olarak değişen bekleme sürelerini (dwell time) hesaba katamaz. Negatif R² skoru, statik tarifenin doğrudan tahmin olarak kullanılmasının, hiçbir veri olmadan sadece basit bir ortalama tahmin vermekten bile daha kötü sonuç doğurduğunu kanıtlamaktadır.
-
-### 4.4. Yön Bazlı Tahmin Zorluğu (Asimetri)
-*   **Bulgu:** Yön 0 (Halkapınar ➔ Cengizhan) MAE değeri **0.3622 dk** iken, Yön 1 (Cengizhan ➔ Halkapınar) MAE değeri **0.4318 dk**'dır (%19.2 daha kötü).
-*   **Sebep-Sonuç:** Cengizhan'dan Halkapınar Metro yönüne giden güzergah (Yön 1); İzmir Adliyesi, Smyrna Meydanı ve Çınarlı gibi trafik yoğunluğunun çok yüksek ve gün içinde dalgalı olduğu ana arterlerden geçmektedir. Bu bölgedeki trafik sıkışıklığının stokastik (rastlantısal) yapısı, Yön 1'de tahmin yapmayı zorlaştırmakta ve hata marjını artırmaktadır.
-
-### 4.5. Soğuk Başlangıç (Cold-Start) Problemi ve Segment Analizi
+### 4.3. Soğuk Başlangıç (Cold-Start) Problemi ve Segment Analizi
 *   **Bulgu:** Seferin başlangıç duraklarında (%0-33) MAE **0.5246 dk** iken, orta duraklarda **0.4157 dk**'ya ve bitiş duraklarında **0.3602 dk**'ya düşmektedir.
 *   **Sebep-Sonuç:** Otobüs sefere ilk başladığı duraklarda henüz geride bıraktığı bir durak olmadığı için `prev_travel_time_min` ve `prev_deviation` gibi geçmişe dayalı lag öznitelikleri `0` değerini alır. Model anlık sürüş dinamiğine dair bağlamsal bilgiden yoksun kaldığı için başlangıç bölgesinde hata oranı yaklaşık 2 kat daha fazladır. Sefer ilerledikçe (`stop_progress` arttıkça) son 5 durağın gerçek seyahat süreleri modele beslenir ve hata payı en düşük seviyeye (0.3602 dk) iner.
 
-### 4.6. Hava Durumunun Etkisi
+### 4.4. Hava Durumunun Etkisi
 *   **Bulgu:** Yağmurlu hava koşullarında MAE **0.4267 dk** iken, açık havada **0.3882 dk** olarak ölçülmüştür.
 *   **Sebep-Sonuç:** Yağmurlu günlerde görüş mesafesinin düşmesi, yol yüzeyi kayganlığı ve trafik yoğunluğunun artması seyahat sürelerini uzatır. Dahası, yolcuların biniş/iniş esnasında şemsiye açıp kapatmaları durak bekleme sürelerinde (dwell time) yüksek değişkenlik yaratır. Bu durum öngörülemezliği artırdığından yağmurlu günlerdeki tahmin hatası daha yüksektir.
 
@@ -108,11 +94,9 @@ Referans makale (**Kaya & Kalay, IEEE Access 2025**) ile elde edilen sonuçları
 ### ⚠️ Kritik Metodolojik Fark Açıklaması
 *   **MAE Farkı:** Bizim MAE değerimiz (~0.35 dk), makale değerinden (2.97 dk) çok daha küçüktür. Bunun sebebi, **makalenin otobüsün tüm sefer (trip) süresini tahmin etmesi**, bizim çalışmamızın ise **duraklar arası tekil segment sürelerini (ortalama 1.17 dk) tahmin etmesidir**.
 *   **R² ve MAPE Farkı:** Uçtan uca seyahat sürelerinde hedef değişkenin varyansı çok yüksektir (örneğin 30-50 dk arası seyahat süreleri). Varyans büyük olduğu için modellerin bu varyansı açıklama oranı (R²) 0.90'ların üzerine rahatlıkla çıkabilmektedir. Bizim segment bazlı varyansımız çok dar olduğundan R² değerimiz makalenin gerisinde görünmektedir. MAPE'de ise 1.17 dakikalık küçük bir segmentte yapılan 20 saniyelik bir hata oransal olarak %30-40 MAPE'ye yol açmaktadır; oysa makaledeki 30 dakikalık bir seferde yapılan 3 dakikalık hata %10 MAPE olarak yansır.
-*   **Sonuç:** Segment bazlı tahmin yapmak, durak bazında anlık ve dinamik bilgi ürettiği için operasyonel olarak daha değerlidir ancak metrik bazında makaleyle doğrudan (elma-armut ilişkisi şeklinde) kıyaslanamayacağı sunumda akademik dille belirtilmelidir.
 
 ---
 
-## 7. Sonuç ve Sunum Önerileri
-1.  **Özgün Katkı Vurgusu:** Sunumda, GTFS planlanan sürelerinin ve birikimli sapmanın (`deviation_history`) modele eklenmesinin performansa en çok katkı sağlayan öznitelikler olduğu (Ablation çalışması sonuçlarıyla) gösterilmelidir.
-2.  **Cold-Start Analizi:** Sefer başlangıcında hatanın neden 2 kat yüksek olduğu ve bunu engellemek için `scheduled_travel_minutes` ile yapılan doldurma mekanizması metodolojik bir başarı olarak sunulmalıdır.
-3.  **Gelecek Çalışmalar:** Modelin başarısını daha da artırmak için kış verileri (kar/fırtına) entegrasyonu ve durak bekleme sürelerinin (dwell time) tahmini üzerine ileri çalışmalar yapılacağı belirtilerek sunum kapatılmalıdır.
+## 7. Sonuç 
+1.  **Özgün Katkı Vurgusu:** GTFS planlanan sürelerinin ve birikimli sapmanın (`deviation_history`) modele eklenmesinin performansa en çok katkı sağlayan öznitelikler olduğu (Ablation çalışması sonuçlarıyla) gösterilmektedir.
+2.  **Cold-Start Analizi:** Sefer başlangıcında hatanın neden 2 kat yüksek olduğu ve bunu engellemek için `scheduled_travel_minutes` ile yapılan doldurma mekanizması metodolojik bir başarı olarak sunulmaktadır.

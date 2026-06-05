@@ -67,13 +67,14 @@ bus_arrival/
 │   ├── hybrid_model.ipynb         # 4. Stacking ensemble + SHAP + ablation
 │   └── evaluation.ipynb           # 5. Kapsamli degerlendirme + makale karsilastirma
 │
-├── scripts/                       # Eski/yardimci Python scriptleri
-│   ├── izmir_hybrid_lstm.py       # Eski LSTM implementasyonu (notebook'lar yerine gecti)
-│   ├── izmir_data_analysis.py     # Veri analiz scripti
-│   ├── comprehensive_data_strategy.py  # Eski veri toplama stratejisi
-│   ├── data_cleaning_pipeline.py  # Veri temizleme
-│   ├── weather_integration.py     # Eski hava durumu entegrasyonu
-│   └── web_dashboard.py           # Flask dashboard (Asama 7'de entegre edilecek)
+├── scripts/                       # Aktif pipeline scriptleri (2026-06-05 refaktor sonrasi)
+│   ├── build_features_route.py    # Hat-parametrik feature engineering (v2+v3+v4 tek script)
+│   ├── improved_ml.py             # XGBoost/RF Improved (--route arg)
+│   ├── improved_lstm.py           # Improved LSTM (--route arg)
+│   └── build_multi_route_comparison.py  # 3 hat ozet karsilastirma tablosu
+│   # Not: eski/kullanilmayan scriptler (izmir_*, web_dashboard, data_cleaning,
+│   #      weather_integration, comprehensive_data_strategy, add_features_v3,
+│   #      add_dwell_features, update_evaluation) 2026-06-05'te silindi.
 │
 ├── results/                       # Model ciktilari
 │   └── tables/                    # CSV sonuc tablolari

@@ -542,7 +542,6 @@ CSE496-Graduation-Project/
 │       ├── comprehensive_evaluation.png ✅
 │       └── weather_time_impact.png      ✅
 ├── data/bus-eshot-gtfs/            ✅ Mevcut (2.24M kayıt)
-├── izmir_hybrid_lstm.py            ← Kullanılmıyor (notebook'lar yerine geçti)
-├── web_dashboard.py                ← Aşama 7'de entegre edilecek
+├── (izmir_hybrid_lstm.py, web_dashboard.py vb. eski scriptler 2026-06-05'te silindi)
 └── EXECUTION_PLAN.md               ✅ Bu dosya
 ```

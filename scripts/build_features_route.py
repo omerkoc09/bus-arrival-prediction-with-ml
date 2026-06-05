@@ -1,10 +1,11 @@
 """
 Hat-Parametrik Feature Engineering — v2 + v3 + v4 (tek script)
 =============================================================
-feature_engineering_v2.ipynb + add_features_v3.py + add_dwell_features.py
-mantığını TEK scriptte ve HAT-PARAMETRIK olarak birleştirir.
+Eski feature_engineering_v2.ipynb + add_features_v3.py + add_dwell_features.py
+mantığını TEK scriptte ve HAT-PARAMETRIK olarak birleştirir. (Bu üç eski dosya
+artık silindi; tüm mantıkları burada birleşik ve hat-parametrik halde.)
 
-Notebook 502'ye hardcoded'di (GTFS filtresi route_id==502, STOPS_DIR0/1).
+Eski notebook 502'ye hardcoded'di (GTFS filtresi route_id==502, STOPS_DIR0/1).
 Bu script durak koordinatlarını config.ROUTES[route_id]'den alır, GTFS
 scheduled sürelerini ilgili route_id için hesaplar. Böylece 268, 565, 502
 (ve config'deki herhangi bir ACTIVE_ROUTE_ID) için aynı feature seti üretilir.

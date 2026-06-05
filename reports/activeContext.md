@@ -27,7 +27,7 @@
 - Kalan is: bu notlari nihai sunum dosyasina/konusmaci notlarina tasimak.
 
 ### 3. Demo Sistemi (ORTA ONCELIK)
-- `scripts/web_dashboard.py` hala model sonuclarina baglanmadi.
+- Eski `web_dashboard.py` 2026-06-05 refaktorunde silindi (modele hic baglanmamisti). Demo sifirdan kurulmali.
 - Teslimde canli gosterim bekleniyorsa entegrasyon zaman riski tasiyor.
 
 ### 4. Veri Toplama ve Modelleme ✅ TAMAMLANDI
@@ -41,7 +41,7 @@
 | # | Bloklayici | Etki | Cozum |
 |---|-----------|------|-------|
 | 1 | **Yagisli/kis kosullari verisi yok** | Hava durumu feature etkisi guclu sekilde savunulamiyor | Yagisli donemde veri topla veya bunu acik sinirlilik olarak raporla |
-| 2 | **Demo sistemi entegre degil** | Canli gosterim/planned deployment zayif kaliyor | `web_dashboard.py`yi LSTM ya da secilen modelle entegre et |
+| 2 | **Demo sistemi yok** | Canli gosterim/planned deployment zayif kaliyor | Demo'yu sifirdan kur, `models/improved_lstm*.pt` ile entegre et (eski web_dashboard.py silindi) |
 | 3 | **Sunum ve final rapor tam kapanmadi** | Teknik calisma teslim artefaktina donusmeyebilir | Sunum metni, rapor bolumleri ve sekil/tablo referanslarini tamamla |
 | 4 | **LSTM vs Random Forest anlamlilik testi eksik** | En iyi model iddiasi istatistiksel acidan eksik kalabilir | Evaluation notebook'una DL karsilastirmasini ekle |
 
@@ -52,7 +52,7 @@
 1. **Final rapor yazimi** — Sonuclar, sinirliliklar ve ozgun katkilari tek bir dille kapat
 2. **Sunum sonlandirma** — Slayt anlatim akisi, konusmaci notlari ve sure yonetimini tamamla
 3. **LSTM vs RF istatistiksel testi** — En iyi model iddiasini formal olarak destekle
-4. **Demo sistemi** — Zaman kalirsa `web_dashboard.py`yi secilen modelle bagla
+4. **Demo sistemi** — Zaman kalirsa demo'yu sifirdan kurup `models/improved_lstm*.pt` ile bagla
 
 ---
 

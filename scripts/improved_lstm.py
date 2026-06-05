@@ -13,11 +13,11 @@ Baseline LSTM uzerindeki iyilestirmeler:
                                stop_hist_median, prev_speed_mpm
 
 Kullanim:
-    # Once yeni ozellikleri olustur:
-    python add_features_v3.py
+    # Once ilgili hat icin feature setini olustur (v2+v3+v4 tek script):
+    python build_features_route.py --route 502
 
     # Sonra bu scripti calistir:
-    python improved_lstm.py
+    python improved_lstm.py --route 502
 """
 
 import os
@@ -74,10 +74,10 @@ if os.path.exists(CSV_V4):
     print(f"Veri   : v4 (dwell_time_sec + v3 ozellikleri mevcut)")
 elif os.path.exists(CSV_V3):
     CSV_PATH = CSV_V3
-    print(f"Veri   : v3 (dwell icin add_dwell_features.py calistirin)")
+    print(f"Veri   : v3 (v4/dwell icin: build_features_route.py --route {ROUTE_ID})")
 else:
     CSV_PATH = CSV_V2
-    print(f"Veri   : v2 (yeni ozellikler icin once add_features_v3.py calistirin)")
+    print(f"Veri   : v2 (tum ozellikler icin: build_features_route.py --route {ROUTE_ID})")
 
 df = pd.read_csv(CSV_PATH)
 print(f"Yuklendi: {len(df)} satir")
