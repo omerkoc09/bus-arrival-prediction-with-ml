@@ -17,8 +17,10 @@ A/B-gudumlu 6 adimli program (detay: progress.md §Iyilestirme Programi). Ozet:
   *"daha sofistike != daha iyi"* temalari ampirik kanitlandi (final raporda guclu anlati).
 - **Kucuk gercek kazanclar:** feature selection (XGB 0.4388→0.4327), cold-start
   none+is_trip_start (→0.4304), window=7 (R2 +0.02).
-- **Guncel reproducible (seed=42):** Improved LSTM MAE=**0.3587**/R2=0.367,
-  XGBoost MAE=**0.4304**/R2=0.636. (Eski 0.3449/0.3907 tekrar uretilemedi — bkz. progress.md.)
+- **Guncel reproducible (seed=42):** **XGBoost MAE=0.4304/R2=0.636 (en pratik tek model)**;
+  LSTM MAE=0.3587 ama bu FARKLI test setinde. Program-sonrasi adil karsilastirma (Eksik 2):
+  LSTM, RF/XGBoost'tan istatistiksel anlamli DEGIL (p=0.095 / 0.91) → "LSTM en iyi" artefaktti.
+  (Eski 0.3449/0.3907 da tekrar uretilemedi — bkz. progress.md.)
 
 ### 1. Final Teslim Paketleme (KRITIK - DEVAM EDIYOR)
 - **Durum:** Teknik pipeline tamam, modeller yeniden calistirildi ve leakage duzeltmesi sonrasi gecerli sonuclar uretildi.
@@ -27,7 +29,8 @@ A/B-gudumlu 6 adimli program (detay: progress.md §Iyilestirme Programi). Ozet:
 
 ### 2. Sunum Hazirligi (AKTIF)
 - `omer_faruk_koc.pdf` incelendi; 6. ve 7. slaytlar icin konusma akisi cikarildi.
-- Ana mesajlar: LSTM'in en iyi model olmasi, cold-start bulgusu, veri kapsami sinirlari ve sonraki adimlar.
+- Ana mesajlar (DURUST cerceve): modeller adil veride esdeger (XGBoost en pratik tek model),
+  "daha sofistike != daha iyi" + kuantalama tabani bulgulari, 3-hat genelleme, veri kapsami sinirlari.
 - Kalan is: bu notlari nihai sunum dosyasina/konusmaci notlarina tasimak.
 
 ### 3. Demo Sistemi (ORTA ONCELIK)
@@ -47,7 +50,7 @@ A/B-gudumlu 6 adimli program (detay: progress.md §Iyilestirme Programi). Ozet:
 | 1 | **Yagisli/kis kosullari verisi yok** | Hava durumu feature etkisi guclu sekilde savunulamiyor | Yagisli donemde veri topla veya bunu acik sinirlilik olarak raporla |
 | 2 | **Demo sistemi yok** | Canli gosterim/planned deployment zayif kaliyor | Demo'yu sifirdan kur, `models/improved_lstm*.pt` ile entegre et (eski web_dashboard.py silindi) |
 | 3 | **Sunum ve final rapor tam kapanmadi** | Teknik calisma teslim artefaktina donusmeyebilir | Sunum metni, rapor bolumleri ve sekil/tablo referanslarini tamamla |
-| 4 | **LSTM vs Random Forest anlamlilik testi eksik** | En iyi model iddiasi istatistiksel acidan eksik kalabilir | Evaluation notebook'una DL karsilastirmasini ekle |
+| 4 | ✅ **LSTM vs RF anlamlilik testi (COZULDU 2026-06-13)** | Adil test: LSTM ~ RF/XGBoost (anlamli fark yok); XGBoost en pratik. "LSTM en iyi" artefaktti | evaluation.ipynb'e eklendi → lstm_vs_ml_significance.csv |
 
 ---
 
@@ -55,7 +58,7 @@ A/B-gudumlu 6 adimli program (detay: progress.md §Iyilestirme Programi). Ozet:
 
 1. **Final rapor yazimi** — Sonuclar, sinirliliklar ve ozgun katkilari tek bir dille kapat
 2. **Sunum sonlandirma** — Slayt anlatim akisi, konusmaci notlari ve sure yonetimini tamamla
-3. **LSTM vs RF istatistiksel testi** — En iyi model iddiasini formal olarak destekle
+3. ~~LSTM vs RF istatistiksel testi~~ ✅ TAMAMLANDI (2026-06-13) — adil test: modeller esdeger, XGBoost en pratik tek model
 4. **Demo sistemi** — Zaman kalirsa demo'yu sifirdan kurup `models/improved_lstm*.pt` ile bagla
 
 ---
@@ -70,6 +73,10 @@ A/B-gudumlu 6 adimli program (detay: progress.md §Iyilestirme Programi). Ozet:
 ---
 
 ## 2026-04-29 Durum Degerlendirmesi
+
+> ⚠️ **TARIHSEL — kismen gecersiz.** Bu blok 2026-04-29 tarihlidir. Asagidaki
+> "LSTM en iyi model" gozlemi (Kritik Gozlemler #1) 2026-06-13 adil anlamlilik
+> testiyle CURUTULDU: modeller esdeger, XGBoost en pratik (bkz. Bolum 0 + progress.md).
 
 ### Genel Sonuc
 - Proje su anda "teknik calisma tamam, teslim artefaktlari kapatiliyor" asamasinda.

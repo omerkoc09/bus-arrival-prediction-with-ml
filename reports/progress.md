@@ -81,7 +81,10 @@ Kod kalitesi + model dogrulugu icin adim adim, her adim ayri commit:
   temalarini ampirik kanitladi.
 - **Kucuk gercek kazanclar:** feature selection (XGB 0.4388→0.4327), cold-start none+is_trip_start
   (0.4327→0.4304), window=7 (R2 +0.02).
-- **En iyi model:** Improved LSTM MAE 0.3587, R2 0.3666 (route 502, temiz/reproducible).
+- **En pratik tek model: XGBoost Improved** (MAE 0.4304, R2 0.636, route 502, reproducible).
+  Program-sonrasi rigor test (Eksik 2, 2026-06-13): adil (ayni test seti) karsilastirmada LSTM,
+  RF/XGBoost'tan **istatistiksel olarak ANLAMLI DEGIL** (LSTM vs RF p=0.095, LSTM vs XGB p=0.91).
+  Onceki "LSTM en iyi" iddiasi test-seti artefakti idi (bkz. §"LSTM vs ML adil karsilastirma").
 
 ---
 
@@ -247,20 +250,26 @@ is_trip_start + window=7) kanonik ciktilari. Tum degerler seed=42 ile tekrarlana
 | — | Historical Average | 0.5662 | 0.9922 | 62.5 | 0.14 | baseline (notebook, 2026-06-05) |
 | — | Naive (GTFS) | 0.6125 | 1.0935 | 65.0 | -0.05 | baseline (notebook, 2026-06-05) |
 
-**Onemli Not 1 (test seti):** LSTM ve ML farkli test setleri kullanir. LSTM: ~77K sequence,
-kronolojik son %20; ML: 138K segment, son %20. R2 dogrudan karsilastirilamaz; MAE yeterli.
+**Onemli Not 1 (test seti — KRITIK):** Tablodaki LSTM (0.3587) ve ML (0.43) FARKLI test
+setlerinde olculur (LSTM sequence-seviyesi/non-cold-start; ML segment-seviyesi/tum satirlar).
+Bu yuzden DOGRUDAN karsilastirilamazlar. Adil karsilastirma asagida §"LSTM vs ML adil karsilastirma".
 
 **Onemli Not 2 (2026-06-05 ile fark):** Onceki tablo XGBoost'u 0.3907, LSTM'i 0.3449
 gosteriyordu. Bu degerler **tekrar uretilemedi** (seed yoktu; XGBoost'un 0.39'u guncel temiz
 16-feature + none cold-start setupta 0.43'e oturuyor — eski deger gurultulu 29-feature setinin
 o anki split'ine ozeldi). Yukaridaki sayilar artik **seed'le sabit ve tekrarlanabilir.**
 
-### LSTM MAE dusuk ama R2 dusuk paradoksu (hala gecerli)
+### LSTM vs ML — ADIL (ayni test seti) karsilastirma (Eksik 2, 2026-06-13)
 
-LSTM MAE=0.3587 < RF/XGB MAE=0.43, ama LSTM R2=0.37 < XGB R2=0.64.
-LSTM HuberLoss ile buyuk hatalari kesiyor → RMSE=0.5487 dusuk (MAE en iyi). Agac modelleri
-varyansi iyi acikliyor (R2 yuksek) ama daha buyuk RMSE. Pratik kullanim icin MAE birincil:
-**LSTM en iyi.** (Adim 3: MAE ~21s zaten polling kuantalama tabaninda.)
+evaluation.ipynb artik LSTM'i ML ile AYNI segment test setinde satir-hizali karsilastiriyor
+(onceki "LSTM en iyi" sonucu farkli test setlerinden geliyordu — artefakt):
+- **Tam test seti:** hibrit-LSTM (cold-start'ta RF fallback, %54) MAE=0.4373 **>** XGBoost 0.4304.
+- **LSTM'in gercek tahmin ettigi satirlarda (6970/15116):** LSTM vs RF p=0.095, LSTM vs XGB p=0.91
+  → **istatistiksel olarak ANLAMLI FARK YOK.**
+
+**Sonuc:** Uc model adil veride esdeger; **XGBoost Improved en pratik tek model** (tam test
+setinde en dusuk MAE + cold-start fallback gerektirmez). Cikti: `results/tables/lstm_vs_ml_significance.csv`.
+Bu bulgu "daha sofistike != daha iyi" + Adim 3 kuantalama tabani temalariyla tutarlidir.
 
 ### Surum Tarihcesi
 
