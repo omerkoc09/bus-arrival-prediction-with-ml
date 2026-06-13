@@ -7,8 +7,8 @@ trip_events tablosundaki durak gecis olaylarindan:
 3. ML icin hazir CSV dataset olusturur
 
 Not (API yon eslesmesi):
-    API Yon=1 -> STOPS_DIR0 (Cengizhan -> Halkapinar, seq artar)
-    API Yon=0 -> STOPS_DIR1 (Halkapinar -> Cengizhan, seq azalir)
+    API Yon=1 -> config.ROUTES[hat]["dir0"] (Cengizhan -> Halkapinar, seq artar)
+    API Yon=0 -> config.ROUTES[hat]["dir1"] (Halkapinar -> Cengizhan, seq azalir)
     collector.py find_nearest_stop(yon) ile durak eslesmesi yapiliyor,
     bu nedenle trip_events.stop_seq degerleri zaten dogru stop listesine gore.
     Burada sadece seq'in artan mi azalan mi olduguna bakarak yonu normalize ediyoruz.
@@ -26,7 +26,7 @@ import sqlite3
 from collections import defaultdict
 from datetime import datetime
 
-from config import STOPS_DIR0, STOPS_DIR1, DATA_DIR, ROUTE_ID
+from config import DATA_DIR, ROUTE_ID
 
 DB_PATH = os.path.join(DATA_DIR, "route_502_realtime.db")
 OUTPUT_DIR = os.path.join(DATA_DIR, "extracted_trips")
@@ -85,8 +85,8 @@ def extract_trips(date_filter=None):
     trips = []
     for (bus_id, yon), events in bus_events.items():
         # Seq artis yonunu belirle:
-        # Yon=1 -> STOPS_DIR0 kullaniliyor -> seq 1'den 32'ye artar
-        # Yon=0 -> STOPS_DIR1 kullaniliyor -> seq 1'den 28'e artar
+        # Yon=1 -> dir0 kullaniliyor -> seq 1'den 32'ye artar
+        # Yon=0 -> dir1 kullaniliyor -> seq 1'den 28'e artar
         # Her iki durumda da seq artmali — azaliyorsa yeni trip basliyor
         trips.extend(_split_into_trips(bus_id, yon, events))
 

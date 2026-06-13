@@ -1,6 +1,23 @@
 # Progress
 
-**Son Guncelleme:** 2026-06-05
+**Son Guncelleme:** 2026-06-13
+
+---
+
+## 🔧 2026-06-13 — Iyilestirme Programi (6 adim)
+
+Kod kalitesi + model dogrulugu icin adim adim, her adim ayri commit:
+
+1. **[x] config.py temizligi (TAMAMLANDI)** — Hardcoded `STOPS_DIR0/DIR1` ve kullanilmayan
+   `ALL_STOP_IDS` kaldirildi; durak listeleri artik tamamen GTFS kaynakli (tek dogruluk
+   kaynagi). GTFS yuklenemezse acik `RuntimeError`. `collector.py`, `trip_extractor.py`,
+   `build_features_route.py` ROUTES'a tasindi. Dogrulama: GTFS'ten 502 dir0=32/dir1=28
+   (eski hardcoded ile birebir ayni) → veri kaybi yok.
+2. [ ] Feature selection + dedup (29→~12 feature, ablation destekli)
+3. [ ] Etiket hassasiyeti (GPS interpolasyon ile varis zamani)
+4. [ ] Hedefi sapmaya (deviation) cevirme
+5. [ ] Cold-start tam cozumu
+6. [ ] LSTM hiperparametre sweep (Optuna)
 
 ---
 

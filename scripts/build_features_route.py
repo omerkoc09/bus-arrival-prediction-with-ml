@@ -302,12 +302,10 @@ def haversine_vectorized(lat1, lon1, lat2, lon2):
 
 
 def add_distance(df, route_id):
-    # Durak listesini config.ROUTES'tan al (502 icin STOPS_DIR0/1 ile ayni icerik)
+    # Durak listesini config.ROUTES'tan al (tamamen GTFS kaynakli)
     if route_id in config.ROUTES:
         stops0 = config.ROUTES[route_id]["dir0"]
         stops1 = config.ROUTES[route_id]["dir1"]
-    elif route_id == config.ROUTE_ID:
-        stops0, stops1 = config.STOPS_DIR0, config.STOPS_DIR1
     else:
         raise ValueError(f"route {route_id} icin durak listesi yok (config.ROUTES)")
 

@@ -42,9 +42,8 @@ except ImportError:
     pass  # python-dotenv yuklu degilse ortam degiskenleri dogrudan okunur
 
 from config import (
-    # Backward-compat (Route 502 notebook'lari icin)
+    # Route 502 kimligi (TomTom trafik toplama icin)
     ROUTE_ID,
-    STOPS_DIR0,
     # Endpoint'ler
     ENDPOINT_BUS_POSITIONS,
     ENDPOINT_BUSES_AT_STOP,
@@ -296,7 +295,7 @@ def _build_segment_midpoints():
     """
     segments = []
     route502 = ROUTES.get(ROUTE_ID, {})
-    dir0 = route502.get("dir0", STOPS_DIR0)
+    dir0 = route502.get("dir0", [])
     for i in range(len(dir0) - 1):
         s1, s2 = dir0[i], dir0[i + 1]
         segments.append({
