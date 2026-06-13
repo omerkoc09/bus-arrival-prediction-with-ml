@@ -1,20 +1,24 @@
 # Active Context
 
-**Son Guncelleme:** 2026-04-29
+**Son Guncelleme:** 2026-06-13
 
 ---
 
 ## Aktif Calisma Alanlari
 
-### 0. Dwell Time + Improved Modeller ✅ TAMAMLANDI (2026-06-05)
-- `scripts/add_dwell_features.py` ile `route_502_features_v4.csv` uretildi.
-- `scripts/improved_ml.py` ve `scripts/improved_lstm.py` v4 verisine guncellendi.
-- `improved_ml.py`: XGBoost Improved MAE=0.3907, RF MoE MAE=0.3925 (en iyi ML).
-- `improved_lstm.py`: 2 kritik leakage duzeltmesi yapildi —
-    (1) create_sequences kronolojik siralama eklendi,
-    (2) cumul_deviation/rolling_3_deviation sequence'dan context'e tasindi.
-- Improved LSTM MAE=0.3449 dk — baseline 0.4138'den %16.7 iyilesme.
-- Sonuclar `results/tables/improved_lstm_results.csv` ve `improved_ml_results.csv` dosyalarinda.
+### 0. Iyilestirme Programi ✅ TAMAMLANDI (2026-06-13 — 6 adim, 6 commit)
+A/B-gudumlu 6 adimli program (detay: progress.md §Iyilestirme Programi). Ozet:
+- **Kod kalitesi:** hardcoded durak blogu silindi (GTFS tek kaynak); ML feature 29→16
+  + tekrar kolon temizligi; LSTM reproducible (`--seed`); `--target/--coldstart/--window`
+  CLI knob'lari (deney altyapisi + A/B kaniti). Feature eng. artik build_features_route.py
+  (eski add_dwell_features.py vb. silinmisti).
+- **3 negatif/notr A/B (metodolojik deger):** deviation reframing, GPS interpolasyon,
+  HP tuning — hicbiri MAE'yi iyilestirmedi → *"MAE ~21s polling kuantalama tabaninda"* +
+  *"daha sofistike != daha iyi"* temalari ampirik kanitlandi (final raporda guclu anlati).
+- **Kucuk gercek kazanclar:** feature selection (XGB 0.4388→0.4327), cold-start
+  none+is_trip_start (→0.4304), window=7 (R2 +0.02).
+- **Guncel reproducible (seed=42):** Improved LSTM MAE=**0.3587**/R2=0.367,
+  XGBoost MAE=**0.4304**/R2=0.636. (Eski 0.3449/0.3907 tekrar uretilemedi — bkz. progress.md.)
 
 ### 1. Final Teslim Paketleme (KRITIK - DEVAM EDIYOR)
 - **Durum:** Teknik pipeline tamam, modeller yeniden calistirildi ve leakage duzeltmesi sonrasi gecerli sonuclar uretildi.
