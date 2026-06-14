@@ -1,2 +1,2 @@
 model,MAE (dk),RMSE (dk),MAPE (%),R2
-Improved LSTM,0.2948,0.405,33.04,0.5308
+Improved LSTM,0.2873,0.4162,30.92,0.5794

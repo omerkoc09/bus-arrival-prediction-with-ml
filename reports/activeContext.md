@@ -15,12 +15,12 @@ A/B-gudumlu 6 adimli program (detay: progress.md §Iyilestirme Programi). Ozet:
 - **3 negatif/notr A/B (metodolojik deger):** deviation reframing, GPS interpolasyon,
   HP tuning — hicbiri MAE'yi iyilestirmedi → *"MAE ~21s polling kuantalama tabaninda"* +
   *"daha sofistike != daha iyi"* temalari ampirik kanitlandi (final raporda guclu anlati).
-- **Kucuk gercek kazanclar:** feature selection (XGB 0.4388→0.4327), cold-start
-  none+is_trip_start (→0.4304), window=7 (R2 +0.02).
-- **Guncel reproducible (seed=42):** **XGBoost MAE=0.4304/R2=0.636 (en pratik tek model)**;
-  LSTM MAE=0.3587 ama bu FARKLI test setinde. Program-sonrasi adil karsilastirma (Eksik 2):
-  LSTM, RF/XGBoost'tan istatistiksel anlamli DEGIL (p=0.095 / 0.91) → "LSTM en iyi" artefaktti.
-  (Eski 0.3449/0.3907 da tekrar uretilemedi — bkz. progress.md.)
+- **Kucuk gercek kazanclar:** feature selection, cold-start none+is_trip_start, window=7 (R2 +0.02).
+- **Adil model siralamasi (ayni test seti, route 502, 81.575 segment): XGBoost ≈ LSTM > RF.**
+  XGBoost 0.4327 ≈ LSTM 0.4345 (hibrit) ≈ RF 0.4378; XGBoost vs LSTM p=0.38 (fark yok),
+  XGBoost vs RF p=0.0055 & LSTM vs RF p=0.0014 (ikisi de RF'den anlamli iyi). **XGBoost en pratik
+  tek model** (en dusuk MAE + fallback yok); **LSTM en iyi R2/RMSE** (0.636/0.891). LSTM standalone
+  0.3532 ama farkli/kolay test seti → "LSTM acik ara en iyi" onceki iddia artefaktti.
 
 ### 1. Final Teslim Paketleme (KRITIK - DEVAM EDIYOR)
 - **Durum:** Teknik pipeline tamam, modeller yeniden calistirildi ve leakage duzeltmesi sonrasi gecerli sonuclar uretildi.
@@ -29,7 +29,7 @@ A/B-gudumlu 6 adimli program (detay: progress.md §Iyilestirme Programi). Ozet:
 
 ### 2. Sunum Hazirligi (AKTIF)
 - `omer_faruk_koc.pdf` incelendi; 6. ve 7. slaytlar icin konusma akisi cikarildi.
-- Ana mesajlar (DURUST cerceve): modeller adil veride esdeger (XGBoost en pratik tek model),
+- Ana mesajlar (DURUST cerceve): XGBoost ≈ LSTM > RF (XGBoost en pratik, LSTM en iyi R2),
   "daha sofistike != daha iyi" + kuantalama tabani bulgulari, 3-hat genelleme, veri kapsami sinirlari.
 - Kalan is: bu notlari nihai sunum dosyasina/konusmaci notlarina tasimak.
 
@@ -50,7 +50,7 @@ A/B-gudumlu 6 adimli program (detay: progress.md §Iyilestirme Programi). Ozet:
 | 1 | **Yagisli/kis kosullari verisi yok** | Hava durumu feature etkisi guclu sekilde savunulamiyor | Yagisli donemde veri topla veya bunu acik sinirlilik olarak raporla |
 | 2 | **Demo sistemi yok** | Canli gosterim/planned deployment zayif kaliyor | Demo'yu sifirdan kur, `models/improved_lstm*.pt` ile entegre et (eski web_dashboard.py silindi) |
 | 3 | **Sunum ve final rapor tam kapanmadi** | Teknik calisma teslim artefaktina donusmeyebilir | Sunum metni, rapor bolumleri ve sekil/tablo referanslarini tamamla |
-| 4 | ✅ **LSTM vs RF anlamlilik testi (COZULDU 2026-06-13)** | Adil test: LSTM ~ RF/XGBoost (anlamli fark yok); XGBoost en pratik. "LSTM en iyi" artefaktti | evaluation.ipynb'e eklendi → lstm_vs_ml_significance.csv |
+| 4 | ✅ **LSTM vs RF anlamlilik testi (COZULDU 2026-06-13)** | Adil test: XGBoost ≈ LSTM > RF (XGB vs LSTM p=0.38; ikisi de RF'den anlamli iyi). XGBoost en pratik. "LSTM en iyi" artefaktti | evaluation.ipynb → lstm_vs_ml_significance.csv |
 
 ---
 

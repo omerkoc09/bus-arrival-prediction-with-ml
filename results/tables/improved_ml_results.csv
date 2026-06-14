@@ -1,7 +1,7 @@
 model,MAE (dk),RMSE (dk),MAPE (%),R2
 LSTM Baseline Ref,0.4138,0.6914,42.11,0.0484
-XGBoost Improved (log-transform),0.4304,0.8674,42.46,0.6358
-RF Segment Bazli (Mixture of Experts),0.436,0.8764,43.29,0.6281
-RF Improved (log-transform),0.4392,0.8745,43.15,0.6298
+XGBoost Improved (log-transform),0.4327,0.9032,41.07,0.6263
+RF Segment Bazli (Mixture of Experts),0.434,0.8985,41.62,0.6302
+RF Improved (log-transform),0.4388,0.8955,41.58,0.6327
 RF Baseline Ref (from notebook),0.4695,0.8731,50.22,0.3325
-RF Baseline (orijinal),0.4879,0.977,52.0,0.5379
+RF Baseline (orijinal),0.4834,0.9781,49.89,0.5618

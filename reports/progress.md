@@ -79,12 +79,11 @@ Kod kalitesi + model dogrulugu icin adim adim, her adim ayri commit:
 - **3 negatif/notr A/B bulgusu** (metodolojik deger): deviation reframing, GPS interpolasyon,
   HP tuning hicbiri MAE'yi iyilestirmedi → "kuantalama tabani" + "daha sofistike != daha iyi"
   temalarini ampirik kanitladi.
-- **Kucuk gercek kazanclar:** feature selection (XGB 0.4388→0.4327), cold-start none+is_trip_start
-  (0.4327→0.4304), window=7 (R2 +0.02).
-- **En pratik tek model: XGBoost Improved** (MAE 0.4304, R2 0.636, route 502, reproducible).
-  Program-sonrasi rigor test (Eksik 2, 2026-06-13): adil (ayni test seti) karsilastirmada LSTM,
-  RF/XGBoost'tan **istatistiksel olarak ANLAMLI DEGIL** (LSTM vs RF p=0.095, LSTM vs XGB p=0.91).
-  Onceki "LSTM en iyi" iddiasi test-seti artefakti idi (bkz. §"LSTM vs ML adil karsilastirma").
+- **Kucuk gercek kazanclar:** feature selection, cold-start none+is_trip_start, window=7 (R2 +0.02).
+- **Model siralamasi (adil, ayni segment test seti, route 502, 81.575 segment): XGBoost ≈ LSTM > RF.**
+  XGBoost vs LSTM p=0.38 (fark yok); XGBoost vs RF p=0.0055 ve LSTM vs RF p=0.0014 (ikisi de RF'den
+  anlamli iyi). **XGBoost Improved en pratik tek model** (tam sette en dusuk MAE 0.4327, fallback yok);
+  **LSTM en iyi R2/RMSE** (0.636/0.891). Onceki "LSTM acik ara en iyi" iddiasi test-seti artefakti idi.
 
 ---
 
@@ -234,42 +233,33 @@ Detay: [reports/results_analysis.md](reports/results_analysis.md) §0 ve §11.
 
 ## Guncel Sonuclar (138.282 segment, 27 gun — iyilestirme programi sonrasi)
 
-### Tum Modeller — Sirali (GUNCEL, 2026-06-13, reproducible seed=42)
+### Tum Modeller — ADIL karsilastirma (ayni segment test seti, 2026-06-13, reproducible)
 
-scripts/improved_ml.py ve improved_lstm.py'nin guncel (lean feature + none cold-start +
-is_trip_start + window=7) kanonik ciktilari. Tum degerler seed=42 ile tekrarlanabilir.
+evaluation.ipynb tum modelleri AYNI segment test setinde satir-hizali kiyaslar
+(full_comparison_table.csv) — tek dogru model-karsilastirma budur. seed=42, route 502 (81.575 segment).
 
 | Sira | Model | MAE (dk) | RMSE (dk) | MAPE (%) | R2 | Not |
 |---|-------|---------:|----------:|---------:|---:|---|
-| 1 | **Improved LSTM** | **0.3587** | **0.5487** | 39.9 | 0.367 | w7/u128, none+is_trip_start, seed42 |
-| — | Baseline LSTM (ref) | 0.4138 | 0.6914 | 42.1 | 0.048 | referans |
-| 2 | XGBoost Improved | 0.4304 | 0.8674 | 42.5 | **0.636** | lean 16+is_trip_start, log-transform |
-| 3 | RF Segment Bazli (MoE) | 0.4360 | 0.8764 | 43.3 | 0.628 | mixture of experts |
-| 4 | RF Improved | 0.4392 | 0.8745 | 43.2 | 0.630 | lean, log-transform |
-| 5 | RF Baseline (orijinal) | 0.4879 | 0.9770 | 52.0 | 0.538 | log yok, referans |
-| — | Historical Average | 0.5662 | 0.9922 | 62.5 | 0.14 | baseline (notebook, 2026-06-05) |
-| — | Naive (GTFS) | 0.6125 | 1.0935 | 65.0 | -0.05 | baseline (notebook, 2026-06-05) |
+| 1 | **XGBoost Improved** | **0.4327** | 0.903 | 41.1 | 0.626 | en pratik (cold-start fallback yok) |
+| 2 | LSTM (hibrit) | 0.4345 | **0.891** | 40.7 | **0.636** | en iyi R2/RMSE; cold-start'ta RF fallback |
+| 3 | RF Improved | 0.4378 | 0.896 | 41.6 | 0.633 | lean, log-transform |
+| — | Historical Average | 0.645 | 1.317 | 62.7 | 0.206 | baseline |
+| — | Naive (GTFS) | 0.734 | 1.516 | 68.2 | -0.05 | baseline |
 
-**Onemli Not 1 (test seti — KRITIK):** Tablodaki LSTM (0.3587) ve ML (0.43) FARKLI test
-setlerinde olculur (LSTM sequence-seviyesi/non-cold-start; ML segment-seviyesi/tum satirlar).
-Bu yuzden DOGRUDAN karsilastirilamazlar. Adil karsilastirma asagida §"LSTM vs ML adil karsilastirma".
+> **NOT:** Improved LSTM *standalone* (kendi sequence test setinde, cold-start haric) MAE=0.3532
+> verir — ama bu daha kolay/farkli bir test seti oldugundan ML ile DOGRUDAN karsilastirilamaz.
+> Adil kiyas yukaridaki tablodur. (Onceki raporlarin 0.3449/0.3587'si bu artefakttan kaynaklaniyordu.)
 
-**Onemli Not 2 (2026-06-05 ile fark):** Onceki tablo XGBoost'u 0.3907, LSTM'i 0.3449
-gosteriyordu. Bu degerler **tekrar uretilemedi** (seed yoktu; XGBoost'un 0.39'u guncel temiz
-16-feature + none cold-start setupta 0.43'e oturuyor — eski deger gurultulu 29-feature setinin
-o anki split'ine ozeldi). Yukaridaki sayilar artik **seed'le sabit ve tekrarlanabilir.**
+### Istatistiksel anlamlilik — XGBoost ≈ LSTM > RF (Eksik 2, 2026-06-13)
 
-### LSTM vs ML — ADIL (ayni test seti) karsilastirma (Eksik 2, 2026-06-13)
+Ayni test setinde paired t-test + Wilcoxon (referans = en dusuk MAE'li XGBoost):
+- **XGBoost vs LSTM: p=0.38 → FARK YOK** (iki en iyi model istatistiksel olarak esdeger).
+- **XGBoost vs RF: p=0.0055** ve **LSTM vs RF (temiz satirlar): p=0.0014** → ikisi de RF'den ANLAMLI iyi.
 
-evaluation.ipynb artik LSTM'i ML ile AYNI segment test setinde satir-hizali karsilastiriyor
-(onceki "LSTM en iyi" sonucu farkli test setlerinden geliyordu — artefakt):
-- **Tam test seti:** hibrit-LSTM (cold-start'ta RF fallback, %54) MAE=0.4373 **>** XGBoost 0.4304.
-- **LSTM'in gercek tahmin ettigi satirlarda (6970/15116):** LSTM vs RF p=0.095, LSTM vs XGB p=0.91
-  → **istatistiksel olarak ANLAMLI FARK YOK.**
-
-**Sonuc:** Uc model adil veride esdeger; **XGBoost Improved en pratik tek model** (tam test
-setinde en dusuk MAE + cold-start fallback gerektirmez). Cikti: `results/tables/lstm_vs_ml_significance.csv`.
-Bu bulgu "daha sofistike != daha iyi" + Adim 3 kuantalama tabani temalariyla tutarlidir.
+**Sonuc: XGBoost ≈ LSTM > RF.** XGBoost en pratik tek model (en dusuk MAE + cold-start fallback
+gerektirmez); LSTM en iyi R2/RMSE. "LSTM acik ara en iyi" onceki iddia bir test-seti artefakti idi
+(LSTM yalnizca kolay non-cold-start satirlarda olculuyordu). Cikti: `lstm_vs_ml_significance.csv`,
+`statistical_tests.csv`. Bu, "daha sofistike != daha iyi" + Adim 3 kuantalama tabani temalariyla tutarli.
 
 ### Surum Tarihcesi
 
@@ -279,10 +269,10 @@ Bu bulgu "daha sofistike != daha iyi" + Adim 3 kuantalama tabani temalariyla tut
 | 138K leakage'li | 2026-04-29 sabah | 0.02 (leakage!) | Yok |
 | 138K duzeltilmis | 2026-04-29 ogleden sonra | 0.41 (LSTM) | Yuksek |
 | 138K + dwell + improved | 2026-06-05 | 0.3449 (LSTM, seed yok) | Yuksek ama tekrar uretilemez |
-| **Iyilestirme programi** | **2026-06-13** | **0.3587 (LSTM, seed42)** | **Yuksek + reproducible** |
+| **Iyilestirme programi** | **2026-06-13** | **0.4327 (XGB, adil) / 0.3532 (LSTM standalone)** | **Yuksek + reproducible** |
 
-> Baseline LSTM → Improved LSTM: MAE 0.4138 → 0.3587 dk (%13.3 iyilesme).
-> Naive GTFS'e gore: %41.4 iyilesme (0.6125 → 0.3587 dk).
+> Adil kiyas (ayni test seti): XGBoost 0.4327 ≈ LSTM 0.4345 > RF 0.4378; baseline Naive 0.734.
+> XGBoost'un Naive'e gore iyilesmesi: %41 (0.734 → 0.4327). LSTM standalone (kolay set): 0.3532.
 > Tum sonuclar artik seed=42 ile tekrarlanabilir (Adim 6).
 
 ---

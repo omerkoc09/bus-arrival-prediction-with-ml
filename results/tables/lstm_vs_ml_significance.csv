@@ -1,3 +1,3 @@
 Karsilastirma,MAE Fark (dk),Daha iyi,p (t-test),p (Wilcoxon),Anlamli (p<0.05)
-LSTM vs Random Forest (Improved),0.0042,LSTM,0.095504,0.073647,Hayir
-LSTM vs XGBoost (Improved),-0.0003,XGBoost (Improved),0.910719,0.669266,Hayir
+LSTM vs Random Forest (Improved),0.0073,LSTM,0.001447,0.00065,Evet
+LSTM vs XGBoost (Improved),0.0023,LSTM,0.315663,0.314154,Hayir
