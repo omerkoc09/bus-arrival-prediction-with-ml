@@ -1,8 +1,33 @@
 \chapter{CONCLUSION}
 
-%% TASLAK — sonraki turda yazilacak. Planlanan bolumler:
-%%  6.1 Summary of Findings
-%%  6.2 Limitations
-%%  6.3 Future Work
+\section{Summary of Findings}
 
-This chapter will summarize the findings of the project, discuss its limitations, and outline directions for future work.
+This project designed, implemented, and rigorously evaluated a context-aware machine learning system for predicting inter-stop bus travel times on the İzmir ESHOT network. An end-to-end, reproducible pipeline was built that collects real-time bus positions, weather, and traffic; extracts clean stop-to-stop segments; engineers temporal, spatial, schedule, historical, and dwell-time features; and trains a range of models from simple baselines to a dual-input LSTM. The system was developed and validated on an independently collected dataset spanning roughly three months and three routes.
+
+On a fair, common test set, the learned models reach a Mean Absolute Error of about $0.43$~minutes, far below the naïve schedule-based and historical-average baselines. The central modeling finding is that the classical XGBoost model and the deep LSTM are statistically indistinguishable ($p = 0.38$), while both significantly outperform the Random Forest. Because XGBoost matches the deep model without requiring a cold-start fallback, it is the most practical single model for this task. The method also generalizes: applied unchanged to two additional routes, it produces consistent results, showing that it captures transferable structure rather than the idiosyncrasies of a single line.
+
+Equally important are the project's methodological findings. A disciplined, A/B-driven development process revealed that the achievable accuracy is bounded by a measurement floor imposed by the 30-second public polling interval, that simplifying the model (fewer features, a classical learner, a straightforward target) does not reduce accuracy, and that a fair same-test-set comparison overturns an earlier impression that the deep model was best. The schedule-derived and dwell-time features, both central design hypotheses, were confirmed to be among the most informative inputs.
+
+\section{Limitations}
+
+Several limitations are acknowledged and frame the interpretation of the results:
+
+\begin{itemize}
+    \item \textbf{Measurement floor.} The ground-truth travel times are limited by the 30-second public GPS polling interval; the achievable error is close to this measurement precision, and finer accuracy would require denser positioning data that the public API does not expose.
+    \item \textbf{Prediction scale.} The system predicts short inter-stop segment times rather than full-route arrival times, which makes the numerical comparison with trip-level studies indirect and inflates percentage-based error metrics.
+    \item \textbf{Weather coverage.} The collected data is dominated by clear and cloudy conditions; although a small set of rainy segments shows higher error, it is insufficient to train a reliable weather-aware model, and no snow was observed.
+    \item \textbf{No live demonstrator.} The project delivers the predictive pipeline but not a passenger-facing real-time application.
+\end{itemize}
+
+\section{Future Work}
+
+Several directions follow naturally from these findings:
+
+\begin{itemize}
+    \item \textbf{Denser positioning data.} Because accuracy is bounded by the polling floor rather than the model, the most impactful improvement would be access to a higher-frequency position feed (for example, a GTFS-Realtime source), which would lower the measurement floor itself.
+    \item \textbf{Trip-level arrival prediction and demonstration.} The segment-level predictions can be accumulated into full-route arrival estimates and surfaced through a live dashboard, turning the pipeline into a passenger-facing service.
+    \item \textbf{Richer contextual data.} Extending the collection across seasons would capture rain and snow in sufficient quantity to properly evaluate weather-aware models, and integrating denser traffic data could help during congested periods.
+    \item \textbf{Broader generalization.} Applying the method to a larger set of routes, and exploring a single model trained jointly across routes, would test whether shared structure can be exploited for transfer.
+\end{itemize}
+
+In conclusion, this project delivers a reproducible, honestly evaluated bus arrival time prediction system for İzmir, and -- perhaps more valuably -- a clear, evidence-based account of what does and does not improve such a system, including the recognition that, under the available data, a simple and interpretable model is as good as a complex one.
