@@ -66,7 +66,8 @@
 
 % Additional packages if needed
 %% For the sake of not messing the template add them here
-\usepackage[utf8]{inputenc}   %% UTF-8 girdi (Turkce karakterler)
+%% NOT: inputenc YUKLENMEZ — TeX Live 2025'te UTF-8 girdi varsayilandir ve
+%% inputenc'i biblatex/csquotes'tan sonra yuklemek uyari uretir.
 \usepackage[T1]{fontenc}      %% Turkce karakterlerin (İ, ş, ğ, ...) dogru render'i
 \usepackage{booktabs}         %% sonuc tablolari icin profesyonel cizgiler
 \usepackage{tikz}             %% LSTM mimari diyagrami
