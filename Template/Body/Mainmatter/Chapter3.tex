@@ -34,7 +34,7 @@ Weather is collected hourly from the OpenWeatherMap service (temperature, humidi
 
 \subsection{Storage and Volume}
 
-All observations are stored in an SQLite database across five tables: bus positions, stop arrivals, stop-transition (trip) events, weather readings, and traffic readings, with indexes to support efficient offline querying. Over a continuous collection window of 27~days, approximately four million bus-position records were gathered across the three routes, which were later converted into tens of thousands of clean travel-time segments per route (for example, more than $81{,}000$ segments for route 502).
+All observations are stored in an SQLite database across five tables: bus positions, stop arrivals, stop-transition (trip) events, weather readings, and traffic readings, with indexes to support efficient offline querying. Over a collection window spanning April to June 2026 (73 days with recorded data), approximately four million bus-position records were gathered across the three routes, which were later converted into tens of thousands of clean travel-time segments per route (for example, more than $81{,}000$ segments for route 502).
 
 \section{Trip and Segment Extraction}
 
