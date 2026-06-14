@@ -1,9 +1,64 @@
 \chapter{IMPLEMENTATION}
 
-%% TASLAK — sonraki turda yazilacak. Planlanan bolumler:
-%%  4.1 Technology Stack
-%%  4.2 Pipeline Implementation
-%%  4.3 The Improvement Program and A/B Methodology (6 steps)
-%%  4.4 Reproducibility
+This chapter describes how the methodology of Chapter~3 is realized in software. It presents the technology stack, the structure of the pipeline, the A/B-driven improvement program that distinguishes this project, and the measures taken to make every result reproducible.
 
-This chapter will detail the implementation of the pipeline, the technology stack, the six-step A/B-driven improvement program, and the measures taken to ensure reproducibility.
+\section{Technology Stack}
+
+The system is implemented entirely in Python. Data are stored in SQLite, a lightweight embedded database that requires no server and keeps the whole project portable. Data manipulation uses pandas and NumPy. The classical models are implemented with scikit-learn (Random Forest and Linear Regression) and the XGBoost library \cite{chen2016}, while the deep learning model is implemented in PyTorch. Visualizations and exploratory analysis are produced with Matplotlib and Jupyter notebooks. External data are obtained from the İzmir open transit API, the OpenWeatherMap service, the TomTom traffic service, and a static GTFS feed \cite{gtfs}.
+
+\section{Pipeline Implementation}
+
+The pipeline is implemented as a small set of focused, command-line programs, each responsible for one stage and each parameterized by the route identifier so that the same code serves all three routes.
+
+\begin{itemize}
+    \item \textbf{Collector:} polls the live position, weather, and traffic services and writes raw observations to the database.
+    \item \textbf{Feature builder:} reads the raw events for a given route, extracts clean segments, and produces the engineered feature table. Because it is route-parametric, the same logic produces a consistent feature set for every route from each route's own GTFS schedule and stop coordinates.
+    \item \textbf{Classical model trainer:} trains and evaluates the Random Forest and XGBoost models and writes their metrics to disk.
+    \item \textbf{Deep model trainer:} trains the dual-input LSTM and saves both the model and a self-describing checkpoint (including the scalers and the architecture hyperparameters) so that it can be reloaded for evaluation.
+    \item \textbf{Comparison and evaluation:} a multi-route comparison program and an evaluation notebook aggregate the results, compare all models on the same test set, run the statistical tests, and produce the final tables and figures.
+\end{itemize}
+
+\section{The Improvement Program and A/B Methodology}
+
+The most distinctive part of this project is not any single model but the disciplined way in which the system was improved. Rather than accepting changes because they are intuitively appealing or commonly recommended, every proposed enhancement was treated as a controlled experiment.
+
+\subsection{A/B Methodology}
+
+Each candidate change was evaluated against a fixed, reproducible benchmark using an explicit decision gate: a change was adopted only if it produced a measurable improvement on the held-out test set; otherwise it was reverted, and the negative result was recorded as a finding rather than discarded. To make these comparisons trustworthy, the evaluation was kept identical across the two arms of every experiment (the same data, the same chronological split, and, for the stochastic deep model, the same random seed), so that any observed difference could be attributed to the change itself.
+
+This methodology was applied over a sequence of six steps, summarized in Table~\ref{tab:program}. Crucially, three of the six steps produced negative or neutral results. In a conventional narrative these would simply be omitted, but here they are among the most valuable outcomes, because together they establish that the achievable accuracy is bounded by the data and that additional complexity does not help.
+
+\begin{table}[!htbp]
+    \centering
+    \caption{\label{tab:program}The six-step A/B-driven improvement program and its outcomes.}
+    \begin{tabular}{@{}clp{6.0cm}@{}}
+        \toprule
+        \textbf{Step} & \textbf{Change} & \textbf{A/B outcome} \\
+        \midrule
+        1 & Codebase cleanup (single GTFS stop source) & Refactor; removed a redundant hard-coded stop list. \\
+        2 & Feature selection (29 $\rightarrow$ 16 features) & \textbf{Adopted}: error held or improved with fewer features. \\
+        3 & Label precision via GPS interpolation & \textbf{Reverted}: cleaner labels but only $\approx$8\% coverage at 30~s polling. \\
+        4 & Target reframing (predict deviation) & \textbf{Reverted}: did not beat the log-transformed travel-time target. \\
+        5 & Cold-start handling (5 strategies) & \textbf{Adopted}: ``no fill + trip-start indicator''. \\
+        6 & Reproducibility seed + LSTM tuning & \textbf{Adopted seed}; longer window improved $R^2$, error unchanged. \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Outcomes of the Six Steps}
+
+\textbf{Step 1 (Cleanup).} The stop definitions were unified so that all routes derive their stops from the single GTFS source, removing a legacy hard-coded list that risked inconsistency. This step changed no metric but made the pipeline cleaner and route-agnostic.
+
+\textbf{Step 2 (Feature selection).} The feature set was reduced from 29 to 16 features by removing redundant time encodings and the weather and traffic features, whose contribution was negligible on the collected data. The error did not increase; for the tree models it slightly decreased. This is the first instance of a recurring theme: a simpler model is not a worse model here.
+
+\textbf{Step 3 (Label precision).} A higher-precision labeling scheme was prototyped that interpolates the moment a bus passes a stop from its surrounding GPS points, rather than using the coarse poll timestamp. Where it could be applied, it genuinely reduced label noise; however, at a 30-second polling interval most stop crossings have too few nearby points, so the scheme covered only about 8\% of segments. The A/B gate therefore rejected it. This negative result is important: it empirically demonstrates that the prediction error is bounded by a \emph{measurement floor} imposed by the public data, not by the models.
+
+\textbf{Step 4 (Target reframing).} A common recommendation is to predict the deviation from schedule instead of the travel time directly. When tested, this reframing did not improve the result; for the tree models it was worse. The reason is twofold: the scheduled time is already provided to the models as a feature, so subtracting it from the target adds no information, and the logarithmic transformation already stabilizes the skewed travel-time distribution. The original formulation was kept.
+
+\textbf{Step 5 (Cold-start).} At the start of a trip there is no recent history, and the first few segments are intrinsically harder to predict. Five strategies for handling this cold-start condition were compared. The best was to leave the missing lag values unfilled and instead provide the model with an explicit trip-start indicator, allowing it to learn how to treat these segments rather than masking them with a synthetic value.
+
+\textbf{Step 6 (Reproducibility and tuning).} A fixed random seed was introduced so that the deep model produces identical results across runs, which both improves scientific rigor and makes the subsequent hyperparameter search fair. A small grid search over the input window and hidden size, confirmed across multiple seeds, found that a longer input window slightly improved the coefficient of determination but left the error essentially unchanged, once more confirming the measurement floor identified in Step~3.
+
+\section{Reproducibility}
+
+Reproducibility was treated as a first-class requirement. The data split is chronological and deterministic, the classical models use fixed random states, and the deep model is fully seeded so that two runs with the same seed produce identical metrics. All scripts are parameterized through the command line, and every reported metric is written to a results file so that the tables in the next chapter can be regenerated directly from the pipeline. As a result, the entire study can be reproduced end to end from the stored database.
