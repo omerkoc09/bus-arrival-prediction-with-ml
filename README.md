@@ -18,7 +18,7 @@ Projenin özgün katkısı, **GTFS scheduled time**'ı bir model feature'ı olar
 İzmir özelinde toplanan gerçek zamanlı veriyle makale sonuçlarını geçmeyi hedeflemektir
 (makale MAE: 2.97 dk).
 
-27 günlük gerçek veri toplama sonucunda **1.98M GPS kaydı** ve **138.282 segment** üzerinde
+veri toplama sonucunda **1.98M GPS kaydı** ve **138.282 segment** üzerinde
 eğitilen modeller, adil (aynı test seti) karşılaştırmada **XGBoost ≈ LSTM > Random Forest**
 sonucunu vermiştir; en iyi MAE **0.43 dakika** (XGBoost), en iyi R²/RMSE ise LSTM'e aittir.
 
