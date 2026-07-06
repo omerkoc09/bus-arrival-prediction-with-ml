@@ -5,7 +5,7 @@
 Referans makale: Kaya & Kalay, *"Spatio-Temporal Forecasting of Bus Arrival Times Using
 Context-Aware Deep Learning Models in Urban Transit Systems"*, IEEE Access 2025.
 
-[![DOI](https://zenodo.org/badge/1007180740.svg)](https://doi.org/10.5281/zenodo.15786173)
+[![DOI](https://zenodo.org/badge/1290911614.svg)](https://doi.org/10.5281/zenodo.21219393)
 ---
 
 ## Proje Özeti
