@@ -127,8 +127,6 @@ Adil karşılaştırma (aynı segment test seti, route 502, 81.575 segment, seed
 ├── papers/                  # Referans makale (PDF)
 ├── presentations/           # Sunum şablonu
 ├── guides/                  # Teknik dokümantasyon (İztek API guide)
-├── EXECUTION_PLAN.md        # Ana yürütme planı
-└── ROUTE_502_PILOT_PLAN.md  # Route 502 pilot çalışma detayları
 ```
 
 ---
